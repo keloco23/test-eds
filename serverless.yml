@@ -1,0 +1,49 @@
+service: test-edarkstore
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  environment:
+    AWS_ACCESS_KEY_ID: "fake_access_key"
+    AWS_SECRET_ACCESS_KEY: "fake_secret_key"
+    AWS_SESSION_TOKEN: "fake_session_token"
+    S3_BUCKET: test-bucket
+    S3_ENDPOINT_URL: http://localhost:4566
+    IS_OFFLINE: true
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource: "*"
+
+functions:
+  getUf:
+    handler: functions/uf.get_uf
+    events:
+      - http:
+          path: get-uf
+          method: post
+
+plugins:
+  - serverless-offline
+  - serverless-s3-local
+
+custom:
+  serverless-offline:
+    noAuth: true
+  s3:
+    host: localhost
+    port: 4566
+    directory: ./s3-storage
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.S3_BUCKET}
